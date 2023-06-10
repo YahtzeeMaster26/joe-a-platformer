@@ -105,6 +105,7 @@ function drawLevel(clear = false) {
     }
   }
   drawPlayer();
+  drawPortalLines();
   prevLevel = deepCopy(level);
   prevSwitch = deepCopy(player.switchsOn);
   prevTimer = player.timerOn;
@@ -112,6 +113,60 @@ function drawLevel(clear = false) {
   prevJumpState = player.jumpOn;
   prevCoin = player.coins;
   prevSpawnPos = [player.spawnPoint[0], player.spawnPoint[1]];
+}
+
+function drawPortalLines() {
+  if (!player.portalLines) return;
+
+  const canvas = id("portalLineLayer");
+  canvas.width = Math.min(
+    level.length * baseBlockSize,
+    window.innerWidth + 2 * camOffsetLimit
+  );
+  canvas.height = Math.min(
+    level[0].length * baseBlockSize,
+    window.innerHeight + 2 * camOffsetLimit
+  );
+
+  const ctx = canvas.getContext("2d");
+  ctx.strokeStyle = "#ff00ff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (const x in level) for (const y in level[x]) {
+    const block = level[x][y];
+    if (!Array.isArray(block)) continue;
+    if (block[0] === 41) drawPortalLine(block, x, y, ctx);
+    else if (block[0] === 73) for (const i in block) if (Array.isArray(block[i]) && block[i][0] === 41) drawPortalLine(
+      block[i],
+      +x + Math.floor((i - 1) / 2) * 0.5 - 0.25,
+      +y + ((i - 1) % 2) * 0.5 - 0.25,
+      ctx
+    );
+  }
+  ctx.stroke();
+
+  if (player.clipboard !== null) {
+    if (!player.miniBlock) ctx.strokeRect(
+      Math.floor(player.clipboard[0]) * baseBlockSize + camCenterx, 
+      Math.floor(player.clipboard[1]) * baseBlockSize + camCentery,
+      baseBlockSize, baseBlockSize
+    );
+    else ctx.strokeRect(
+      player.clipboard[0] * baseBlockSize + camCenterx, 
+      player.clipboard[1] * baseBlockSize + camCentery,
+      baseBlockSize / 2, baseBlockSize / 2,
+    );
+  }
+}
+
+function drawPortalLine(block, x, y, ctx) {
+  x = +x;
+  y = +y;
+  ctx.moveTo((x + 0.5) * baseBlockSize + camCenterx, (y + 0.5) * baseBlockSize + camCentery);
+  const [_, dx, dy, abs] = block;
+  const px = ((dx + 0.5) + (abs ? 0 : x));
+  const py = ((dy + 0.5) + (abs ? 0 : y));
+  ctx.lineTo(px * baseBlockSize + camCenterx, py * baseBlockSize + camCentery);
 }
 
 // TODO make this an obj. with [prop]: true, etc.
@@ -2845,6 +2900,8 @@ function adjustScreen(instant = false) {
   id("background").style.top = camOffsety + "px";
   id("grid").style.left = camOffsetx + "px";
   id("grid").style.top = camOffsety + "px";
+  id("portalLineLayer").style.left = camOffsetx + "px";
+  id("portalLineLayer").style.top = camOffsety + "px";
   drawPlayer();
 }
 function adjustLevelSize() {

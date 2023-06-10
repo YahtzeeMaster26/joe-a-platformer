@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html style="height: 100%;">
   <head>
-    <title>just a level editor</title>
+    <title>joe a platformer</title>
     <link rel="icon" type="image/png" href="../pics/just-a-level-editor.png" />
     <link rel="stylesheet" href="../shared/game.css" />
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
@@ -35,6 +35,7 @@
     <canvas id="playerLayer" style="position: absolute;"></canvas>
     <canvas id="grid" style="position: absolute; display: none;"></canvas>
     <canvas id="levelLayer" style="position: absolute;"></canvas>
+    <canvas id="portalLineLayer" style="position: absolute; display: none;"></canvas>
     <canvas id="luaLayer" style="position: absolute;"></canvas>
 
     <div id="luahtml">
@@ -72,6 +73,7 @@
         Show Subblocks: <span id="showSubblock">ON</span><br />
         False Textures: <span id="falseTexture">ON</span><br />
         Mini Block: <span id="miniBlock">OFF</span><br />
+        Advanced Portal Info: <span id="portalLines">OFF</span><br />
         Coins: <span id="coins">0</span><br />
       </span>
       <span id="controlNotice">
@@ -285,6 +287,12 @@
           <span class="key">T</span>: Reset Timer
         </div>
         <div class="keybind">
+          <span class="key">P</span>: Toggle Advanced Portal Display
+        </div>
+        <div class="keybind">
+          <span class="key">C</span> + Middle Click: Set Block to Next Portal Destination
+        </div>
+        <div class="keybind">
           <span class="key">1</span>: Toggle Info Display
         </div>
         <div class="keybind">
@@ -322,18 +330,10 @@
     </div>
     <div id="mainInfo">
       <div>
-        "just a level editor"<br />
-        Made by <a href="https://thetastypi.github.io/">TheTastyPi</a> and <a href="https://yhvr.me">Yhvr</a><br />
+        "joe a platformer"<br />
+        Mod of <a href="https://thetastypi.github.io/just-a-platformer/levelEditor/">just a platformer</a> by yahtzee<br/>
+        Original made by <a href="https://thetastypi.github.io/">TheTastyPi</a> and <a href="https://yhvr.me">Yhvr</a><br />
         <br />
-        A level editor for<br />
-        "just a platformer"<br />
-        <br />
-        Difficulties<br />
-        <a href="../easier/index.html">EZR</a> | <a href="../easy/index.html">EZ</a> | <a href="../index.html">Normal</a> |
-        <a href="../hard/index.html">HARD</a> <br />
-        <br />
-        <a href="../options.html">Options</a> <br />
-        <a href="https://discord.gg/zVpdcuaXYF">Discord Server</a>
       </div>
     </div>
     <button id="infoOpen" onclick="openInfo();">

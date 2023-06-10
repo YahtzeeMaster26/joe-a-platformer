@@ -31,6 +31,8 @@ const player = {
   targetSize: 20,
   gameSpeed: 1,
   miniBlock: false,
+  portalLines: false,
+  clipboard: null,
   coins: 0,
   showTooltips: true,
   showSubblock: true,
@@ -47,6 +49,7 @@ const control = {
   up: false,
   down: false,
   e: false,
+  c: false,
   space: false
 };
 var level = [

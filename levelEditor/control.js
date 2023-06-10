@@ -103,8 +103,32 @@ id("levelLayer").addEventListener("mousedown", function (input) {
           arraysEqual(level[xb][yb][3], level[xb][yb][4])
         )
           level[xb][yb] = level[xb][yb][1];
+
+        // clipboard stuff here
+        if (player.clipboard !== null && player.selectedBlock[0] === 41) {
+          const block = level[xb][yb];
+          if (block[0] === 41) {
+            block[1] = Math.floor(player.clipboard[0]) - (block[3] ? 0 : xb);
+            block[2] = Math.floor(player.clipboard[1]) - (block[3] ? 0 : yb);
+          } else {
+            console.log(player.clipboard, x, y);
+            const subBlock = block[1 + (x - xb) * 4 + (y - yb) * 2];
+            subBlock[1] = player.clipboard[0] - (subBlock[3] ? 0 : x);
+            subBlock[2] = player.clipboard[1] - (subBlock[3] ? 0 : y);
+          }
+          player.clipboard = null;
+          drawPortalLines();
+        }
+
         drawLevel();
       } else if (input.button === 1 && !locks.building) {
+        console.log(control.c, x, y);
+        if (control.c) {
+          player.clipboard = [x, y];
+          drawPortalLines();
+          return;
+        }
+
         if (player.selectedBlock[1] == player.selectedBlock[0]) {
           id("blockSelect" + player.selectedBlock[0]).style.boxShadow =
             "0 0 0 5px #0000FF";
@@ -168,6 +192,23 @@ id("levelLayer").addEventListener("mousedown", function (input) {
           arraysEqual(level[xb][yb][3], level[xb][yb][4])
         )
           level[xb][yb] = level[xb][yb][1];
+
+        // clipboard stuff here
+        if (player.clipboard !== null && player.selectedBlock[1] === 41) {
+          const block = level[xb][yb];
+          if (block[0] === 41) {
+            block[1] = Math.floor(player.clipboard[0]) - (block[3] ? 0 : xb);
+            block[2] = Math.floor(player.clipboard[1]) - (block[3] ? 0 : yb);
+          } else {
+            console.log(player.clipboard, x, y);
+            const subBlock = block[1 + (x - xb) * 4 + (y - yb) * 2];
+            subBlock[1] = player.clipboard[0] - (subBlock[3] ? 0 : x);
+            subBlock[2] = player.clipboard[1] - (subBlock[3] ? 0 : y);
+          }
+          player.clipboard = null;
+          drawPortalLines();
+        }
+
         drawLevel();
       }
     }
@@ -217,6 +258,23 @@ id("levelLayer").addEventListener("mousemove", function (input) {
           arraysEqual(level[xb][yb][3], level[xb][yb][4])
         )
           level[xb][yb] = level[xb][yb][1];
+
+        // clipboard stuff here
+        if (player.clipboard !== null && player.selectedBlock[0] === 41) {
+          const block = level[xb][yb];
+          if (block[0] === 41) {
+            block[1] = Math.floor(player.clipboard[0]) - (block[3] ? 0 : xb);
+            block[2] = Math.floor(player.clipboard[1]) - (block[3] ? 0 : yb);
+          } else {
+            console.log(player.clipboard, x, y);
+            const subBlock = block[1 + (x - xb) * 4 + (y - yb) * 2];
+            subBlock[1] = player.clipboard[0] - (subBlock[3] ? 0 : x);
+            subBlock[2] = player.clipboard[1] - (subBlock[3] ? 0 : y);
+          }
+          player.clipboard = null;
+          drawPortalLines();
+        }
+
         drawLevel();
       } else if (control.rmb) {
         if (player.miniBlock && trueType !== 73)
@@ -242,6 +300,23 @@ id("levelLayer").addEventListener("mousemove", function (input) {
           arraysEqual(level[xb][yb][3], level[xb][yb][4])
         )
           level[xb][yb] = level[xb][yb][1];
+
+        // clipboard stuff here
+        if (player.clipboard !== null && player.selectedBlock[1] === 41) {
+          const block = level[xb][yb];
+          if (block[0] === 41) {
+            block[1] = Math.floor(player.clipboard[0]) - (block[3] ? 0 : xb);
+            block[2] = Math.floor(player.clipboard[1]) - (block[3] ? 0 : yb);
+          } else {
+            console.log(player.clipboard, x, y);
+            const subBlock = block[1 + (x - xb) * 4 + (y - yb) * 2];
+            subBlock[1] = player.clipboard[0] - (subBlock[3] ? 0 : x);
+            subBlock[2] = player.clipboard[1] - (subBlock[3] ? 0 : y);
+          }
+          player.clipboard = null;
+          drawPortalLines();
+        }
+
         drawLevel();
       }
     }
@@ -393,6 +468,9 @@ document.addEventListener("keydown", function (input) {
         if (isMobile) control.e = !control.e;
         else control.e = true;
         break;
+      case "KeyC":
+        control.c = true;
+        break;
       case "KeyR":
         if (input.shiftKey) {
           respawn(true);
@@ -409,6 +487,13 @@ document.addEventListener("keydown", function (input) {
       case "KeyM":
         player.miniBlock = !player.miniBlock;
         id("miniBlock").innerHTML = player.miniBlock ? "ON" : "OFF";
+        drawPortalLines();
+        break;
+      case "KeyP":
+        player.portalLines = !player.portalLines;
+        id("portalLines").innerHTML = player.portalLines ? "ON" : "OFF";
+        id("portalLineLayer").style.display = player.portalLines ? "block" : "none";
+        drawPortalLines();
         break;
       case "Digit1":
         if (id("info").style.display !== "none") {
@@ -589,6 +674,9 @@ document.addEventListener("keyup", function (input) {
         break;
       case "KeyE":
         control.e = false;
+        break;
+      case "KeyC":
+        control.c = false;
         break;
       case "Space":
         control.space = false;
