@@ -115,6 +115,36 @@ function drawLevel(clear = false) {
   prevSpawnPos = [player.spawnPoint[0], player.spawnPoint[1]];
 }
 
+function drawBullets() {
+  const canvas = id("bulletLayer");
+  const ctx = canvas.getContext("2d");
+  canvas.width = Math.min(
+    level.length * baseBlockSize,
+    window.innerWidth + 2 * camOffsetLimit
+  );
+  canvas.height = Math.min(
+    level[0].length * baseBlockSize,
+    window.innerHeight + 2 * camOffsetLimit
+  );
+
+  for (const bullet of bullets) {
+    const size = bullet.size;
+
+    if (bullet.invincibilityLeft > 0) ctx.globalAlpha = 0.5;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bullet.x * baseBlockSize, bullet.y * baseBlockSize, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    drawBlock(
+      canvas, Math.floor(bullet.x), Math.floor(bullet.y), bullet.bullet,
+      bullet.x % 1 - size / baseBlockSize / 2, bullet.y % 1 - size / baseBlockSize / 2,
+      size / baseBlockSize);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+}
+
 function drawPortalLines() {
   if (!player.portalLines) return;
 
@@ -229,8 +259,8 @@ function drawBlock(
   let xb = (x + xOffset) * baseBlockSize + camCenterx;
   let yb = (y + yOffset) * baseBlockSize + camCentery;
   if (useDefault) {
-    xb = 0;
-    yb = 0;
+    xb = xOffset * baseBlockSize;
+    yb = yOffset * baseBlockSize;
   }
   let clear = false;
   let data;
@@ -528,6 +558,12 @@ function drawBlock(
     case 85:
       lL.fillStyle = `hsla(240,50%,50%,${(data[4] ^ data[6]) * 0.5 + 0.5})`;
       break;
+    case 87:
+      lL.fillStyle = "#000000";
+      break;
+    case 88:
+      lL.fillStyle = "#80808080";
+      break;
     default:
       clear = true;
   }
@@ -537,6 +573,7 @@ function drawBlock(
   if (type === 74 && canvas.id === "levelLayer")
     bL.fillRect(xb, yb, blockSize, blockSize);
   switch (type) {
+    case 0: case 1: case 51: case 74: break;
     case 2:
       lL.strokeStyle = "#880000";
       lL.beginPath();
@@ -2790,7 +2827,47 @@ function drawBlock(
       );
       lL.setLineDash([]);
       break;
+    case 87:
+      const dir = data[1];
+      const vertical = dir === "Left" || dir === "Right" ? false : true;
+      const start = [vertical ? 0.2 : (dir === "Left" ? 0 : 1), vertical ? (dir === "Up" ? 0 : 1) : 0.2];
+      const end = [vertical ? 0.8 : (dir === "Left" ? 0.2 : 0.8), vertical ? (dir === "Up" ? 0.2 : 0.8) : 0.8];
+
+      lL.fillStyle = "#808080";
+      lL.fillRect(xb + start[0] * blockSize, yb + start[1] * blockSize, (end[0] - start[0]) * blockSize, (end[1] - start[1]) * blockSize);
+
+      const innerBlockDrawSize = Math.min(blockSize * 0.6, data[3]);
+
+      lL.save();
+      lL.beginPath();
+      lL.arc(xb + 0.5 * blockSize, yb + 0.5 * blockSize, innerBlockDrawSize / 2, 0, Math.PI * 2); // Math.min(blockSize / 3, data[3])
+      lL.closePath();
+      lL.clip();
+      drawBlock(
+        canvas, x, y, data[2],
+        xOffset + 0.5 * size - innerBlockDrawSize / baseBlockSize / 2,
+        yOffset + 0.5 * size - innerBlockDrawSize / baseBlockSize / 2,
+        innerBlockDrawSize / baseBlockSize,
+        useDefault, subBlock);
+      lL.restore();
+      break;
+    case 88:
+      lL.strokeStyle = "#404040b0";
+      lL.lineWidth = 2;
+      lL.beginPath();
+      lL.moveTo(xb + blockSize * 7 / 10, yb + blockSize / 2);
+      lL.arc(xb + blockSize / 2, yb + blockSize / 2, blockSize / 5, 0, Math.PI * 2);
+      lL.moveTo(xb + blockSize / 10, yb + blockSize / 2);
+      lL.lineTo(xb + blockSize * 9 / 10, yb + blockSize / 2);
+      lL.stroke();
+      break;
     default:
+      lL.fillStyle = "#ff00ff";
+      lL.fillRect(xb, yb, blockSize, blockSize);
+      lL.fillStyle = "#000000";
+      lL.fillRect(xb + blockSize / 2, yb, blockSize / 2, blockSize / 2);
+      lL.fillRect(xb, yb + blockSize / 2, blockSize / 2, blockSize / 2);
+      break;
   }
 }
 function drawGrid() {
@@ -2902,6 +2979,8 @@ function adjustScreen(instant = false) {
   id("grid").style.top = camOffsety + "px";
   id("portalLineLayer").style.left = camOffsetx + "px";
   id("portalLineLayer").style.top = camOffsety + "px";
+  id("bulletLayer").style.left = camOffsetx + "px";
+  id("bulletLayer").style.top = camOffsety + "px";
   drawPlayer();
 }
 function adjustLevelSize() {

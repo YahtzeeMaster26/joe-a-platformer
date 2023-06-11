@@ -63,7 +63,7 @@ var level = [
   [1, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
-const hasHitbox = [1, 5, 11, 24, 25, 26, 40, 47, 51, 61, 62, 75];
+const hasHitbox = [1, 5, 11, 24, 25, 26, 40, 47, 51, 61, 62, 75, 87];
 const blockName = [
   "Empty Space",
   "Solid Block",
@@ -151,7 +151,9 @@ const blockName = [
   "Vacuum", // air friction (83)
   "False Block", // hot garbage (84)
   "Chain Death Block",
-  "Custom Chain Block" // more chain (85,86)
+  "Custom Chain Block", // more chain (85,86)
+  "Cannon Block",
+  "Piercing Field", // bullet stuff (88)
 ];
 const blockSelect = [
   "Special",
@@ -250,7 +252,10 @@ const blockSelect = [
   79,
   80,
   81,
-  82
+  82,
+  "Bullet",
+  87,
+  88,
 ];
 const blockProperty = {
   17: [
@@ -300,7 +305,7 @@ const blockProperty = {
   72: ["Breaking Period", "!Timer", "Reconstruction Period", "!Timer2"],
   73: ["!Q1", "!Q2", "!Q3", "!Q4"],
   74: ["ColorR", "ColorG", "ColorB"],
-  75: ["Next X Offset", "Next Y Offset", "Interval", "!Timer"],
+  75: ["Next X Offset", "Next Y Offset", "Interval", "!Timer", "Loop"],
   76: [
     "Next X Offset",
     "Next Y Offset",
@@ -333,7 +338,20 @@ const blockProperty = {
     "Invert",
     "BlockA",
     "BlockB"
-  ]
+  ],
+  87: [
+    "Direction",
+    "Bullet",
+    "Bullet Size",
+    "Bullet Speed",
+    "Max Simultaneous Bullets",
+    "Next X Offset",
+    "Next Y Offset",
+    "Active Duration",
+    "!State",
+    "!Timer",
+  ],
+  88: ["Pierce Count", "Invincibility Duration"]
 };
 const defaultProperty = {
   17: [325, 1, 600, [], false, false, false, 4000, 20, 1],
@@ -363,7 +381,7 @@ const defaultProperty = {
   72: [1000, 1000, 1000, 1000],
   73: [0, 0, 0, 0],
   74: [255, 127, 127],
-  75: [1, 0, 1000, 1000],
+  75: [1, 0, 1000, 1000, true],
   76: [1, 0, 500, false, 500, false],
   77: [1, "uncollected", false],
   78: [1],
@@ -373,7 +391,9 @@ const defaultProperty = {
   82: [1, 0, 1, false],
   84: [1, 0],
   85: [1, 0, 500, false, 500, false],
-  86: [1, 0, 500, false, 500, false, 1, 0]
+  86: [1, 0, 500, false, 500, false, 1, 0],
+  87: ["Right", 2, 20, 300, 20, 1, 0, 0, false, 0],
+  88: [1, 250],
 };
 const propertyType = {
   17: [
@@ -423,7 +443,7 @@ const propertyType = {
   72: ["number", "number", "number", "number"],
   73: ["block", "block", "block", "block"],
   74: ["number", "number", "number"],
-  75: ["number", "number", "number", "number"],
+  75: ["number", "number", "number", "number", "boolean"],
   76: ["number", "number", "number", "boolean", "number", "boolean"],
   77: ["integer", "any", "boolean"],
   78: ["integer"],
@@ -442,7 +462,9 @@ const propertyType = {
     "boolean",
     "block",
     "block"
-  ]
+  ],
+  87: ["dropdown", "block", "number", "number", "number", "number", "number", "number", "boolean", "number"],
+  88: ["number", "number"],
 };
 const propertyLimit = {
   17: [
@@ -500,7 +522,7 @@ const propertyLimit = {
     [0, 255],
     [0, 255]
   ],
-  75: ["none", "none", [0, 1000 * 60 * 60], "none"],
+  75: ["none", "none", [0, 1000 * 60 * 60], "none", "none"],
   76: ["none", "none", [0, 1000 * 60 * 60], "none", "none", "none"],
   77: [[-100, 100], "none", "none"],
   78: [[-999, 999]],
@@ -519,7 +541,12 @@ const propertyLimit = {
     "none",
     "none",
     "none"
-  ]
+  ],
+  87: [
+    ["Right", "Left", "Up", "Down"], bulletOptions, [0, 500], [0, 2000], "none",
+    "none", "none", [0, 1000 * 3600], "none", "none",
+  ],
+  88: ["none", "none"]
 };
 var prevVersions = [
   [
@@ -601,6 +628,10 @@ function nextFrame(timeStamp) {
     let canSetSpawn = true;
     for (let i = 0; i < simReruns; i++) {
       let shouldDie = false;
+      if (player.shouldDie) {
+        shouldDie = true;
+        player.shouldDie = false;
+      }
       // size change
       let prevSize = player.size;
       player.size =
@@ -1530,20 +1561,22 @@ function nextFrame(timeStamp) {
           timerList.splice(j, 1);
           continue;
         }
-        block[index] -= dt;
-        if ([76, 85, 86].includes(type) && block[5] / block[3] < 0.5) {
-          let xx = x + block[1];
-          let yy = y + block[2];
+        block[index] -= dt; // 5
+        const indexOffset = type === 87 ? 5 : 0;
+        if ([76, 85, 86, 87].includes(type) && block[5 + indexOffset] / block[3 + indexOffset] < 0.5) {
+          let xx = x + block[1 + indexOffset];
+          let yy = y + block[2 + indexOffset];
           let nextBlock = getBlock(xx, yy, true, true);
-          if (getBlock(xx, yy, true)[0] === 86)
-            nextBlock = getBlock(xx, yy, true);
-          if ([76, 85, 86].includes(nextBlock[0]) && !nextBlock[4]) {
-            editProp(xx, yy, nextBlock[0], 4, false, true);
-            editProp(xx, yy, nextBlock[0], 5, false, nextBlock[3]);
+          if (getBlock(xx, yy, true)[0] === 86) nextBlock = getBlock(xx, yy, true);
+
+          const nextIndexOffset = nextBlock[0] === 87 ? 5 : 0
+          if ([76, 85, 86, 87].includes(nextBlock[0]) && !nextBlock[4 + nextIndexOffset]) {
+            editProp(xx, yy, nextBlock[0], 4 + nextIndexOffset, false, true);
+            editProp(xx, yy, nextBlock[0], 5 + nextIndexOffset, false, nextBlock[3 + nextIndexOffset]);
             addTimer(
               xx,
               yy,
-              5,
+              5 + nextIndexOffset,
               nextBlock[0],
               nextBlock[0] === 86 ? undefined : getSubBlockPos(xx, yy)
             );
@@ -1571,19 +1604,20 @@ function nextFrame(timeStamp) {
             case 75:
               block[4] = block[3];
               editProp(x, y, 75, 4, false, block[3]);
-              addTimer(x, y, 4, 75, subBlock);
+              if (block[5]) addTimer(x, y, 4, 75, subBlock);
               let xx = x + block[1];
               let yy = y + block[2];
               let nextBlock = getBlock(xx, yy, true, true);
               if (getBlock(xx, yy, true)[0] === 86)
                 nextBlock = getBlock(xx, yy, true);
-              if ([76, 85, 86].includes(nextBlock[0]) && !nextBlock[4]) {
-                editProp(xx, yy, nextBlock[0], 4, false, true);
-                editProp(xx, yy, nextBlock[0], 5, false, nextBlock[3]);
+              const indexOffset = nextBlock[0] === 87 ? 5 : 0;
+              if (([76, 85, 86, 87].includes(nextBlock[0]) && !nextBlock[4 + indexOffset])) {
+                editProp(xx, yy, nextBlock[0], 4 + indexOffset, false, true);
+                editProp(xx, yy, nextBlock[0], 5 + indexOffset, false, nextBlock[3 + indexOffset]);
                 addTimer(
                   xx,
                   yy,
-                  5,
+                  5 + indexOffset,
                   nextBlock[0],
                   nextBlock[0] === 86 ? undefined : getSubBlockPos(xx, yy)
                 );
@@ -1600,6 +1634,11 @@ function nextFrame(timeStamp) {
             case 86:
               block[5] = block[3];
               block[4] = false;
+              break;
+            case 87:
+              shootBullet(x, y, block);
+              block[10] = block[8];
+              block[9] = false;
               break;
             default:
               break;
@@ -1712,10 +1751,13 @@ function nextFrame(timeStamp) {
       }
     }
     if (player.noclip) player.currentJumps = player.maxJumps;
+    // bullets (not in the sim thing)
+    bulletTick(dt);
     // draw checks
     if (shouldDrawLevel) drawLevel();
     if (player.x !== xprev || player.y !== yprev) adjustScreen();
     if (camx !== lvlxOffset || camy !== lvlyOffset) adjustScreen();
+	  drawBullets();
   }
   window.requestAnimationFrame(nextFrame);
 }
@@ -1817,6 +1859,11 @@ function respawn(start = false) {
       if (blockIncludes(block, 86)) {
         editProp(x, y, 86, 5, false, false, true, 3);
         editProp(x, y, 86, 4, false, false, true);
+        shouldDraw = true;
+      }
+      if (blockIncludes(block, 87)) {
+        editProp(x, y, 87, 10, false, false, true, 3);
+        editProp(x, y, 87, 9, false, false, true);
         shouldDraw = true;
       }
     }
@@ -2234,6 +2281,7 @@ function openPropertyMenu(
         input = document.createElement("select");
         let currentSect;
         for (let j in blockSelect) {
+          if (propertyLimit[type][i] !== "none" && !propertyLimit[type][i].includes(blockSelect[j])) continue;
           if (typeof blockSelect[j] === "string") {
             currentSect = document.createElement("optGroup");
             currentSect.label = blockSelect[j];
@@ -2270,12 +2318,15 @@ function openPropertyMenu(
               }
               option.value = JSON.stringify(newVal);
             } else option.value = blockSelect[j];
-            currentSect.appendChild(option);
+            (propertyLimit[type][i] === "none" ? currentSect : input).appendChild(option);
           }
         }
       } else if (propertyType[type][i] === "boolean") {
         input = document.createElement("input");
         input.type = "checkbox";
+      } else if (propertyType[type][i] === "dropdown") {
+        input = document.createElement("select");
+        input.innerHTML = propertyLimit[type][i].map(opt => `<option value="${opt}">${opt}</option>`);
       } else {
         const isNumber = propertyType[type][i] === "number";
         input = document.createElement(isNumber ? "input" : "textarea");
@@ -2346,13 +2397,16 @@ function openPropertyMenu(
         if (
           !(
             (typeof newVal === propertyType[type][i] ||
+              propertyType[type][i] === "dropdown" ||
               propertyType[type][i] === "any" ||
               propertyType[type][i] === "block" ||
               (propertyType[type][i] === "integer" &&
                 parseInt(newVal) === parseFloat(newVal))) &&
             ((newVal >= propertyLimit[type][i][0] &&
               newVal <= propertyLimit[type][i][1]) ||
-              propertyLimit[type][i] === "none")
+              propertyLimit[type][i] === "none" ||
+              propertyType[type][i] === "dropdown" ||
+              propertyType[type][i] === "block")
           )
         ) {
           err = true;

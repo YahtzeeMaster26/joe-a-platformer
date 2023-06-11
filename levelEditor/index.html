@@ -36,6 +36,7 @@
     <canvas id="grid" style="position: absolute; display: none;"></canvas>
     <canvas id="levelLayer" style="position: absolute;"></canvas>
     <canvas id="portalLineLayer" style="position: absolute; display: none;"></canvas>
+    <canvas id="bulletLayer" style="position: absolute; pointer-events: none;"></canvas>
     <canvas id="luaLayer" style="position: absolute;"></canvas>
 
     <div id="luahtml">
@@ -370,6 +371,7 @@ export text</textarea
   <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
   <script src="lua/flua.js"></script>
   <script src="lua/lz-string.js"></script>
+  <script src="bullets.js"></script>
   <script defer src="main.js"></script>
   <script defer src="control.js"></script>
   <script defer src="lua/api.js"></script>
