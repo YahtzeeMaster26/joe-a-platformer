@@ -1,9 +1,12 @@
 # JOE A PLATFORMER CHANGE LOG
 
+## 2023-06-10: 1.1.1, The Bullet Respawn Hotfix
+- Bullets are now cleared when you die. Oops.
+
 ## 2023-06-10: 1.1.0, The Bullet Update
 - Added canon blocks! Activate them with a chain, and then they will shoot a bullet with the specified direction, speed, and size.
 - Added bullets! These come from canons, and act like blocks that can move around. Only some blocks can be used with bullets.
-- Added the loop option to chain start blocks. It is enabled by default. Its behaviour is self-explanatory.
+- Added the loop option to chain start blocks. Now you can make chain start blocks that only trigger once.
 - Added the piercing field, which lets bullets survive multiple collisions with the player.
 - Blocks with no texture now get draw as missing texture. For Fun.
 - Fixed a bug where xOffset and yOffset would not affect blocks when drawing the block select bar.

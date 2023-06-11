@@ -1,5 +1,5 @@
-const bullets = [];
-const bulletsShotPerLocation = {};
+let bullets = [];
+let bulletsShotPerLocation = {};
 
 const DIRECTION_ENUM = {
 	"Right": [1, 0],

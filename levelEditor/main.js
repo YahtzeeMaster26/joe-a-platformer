@@ -1818,6 +1818,9 @@ function respawn(start = false) {
     if (player.g > 0) spawny += blockSize - player.size;
   }
 
+  bullets = [];
+  bulletsShotPerLocation = {};
+
   player.x = spawnx;
   player.y = spawny;
 
